@@ -6,6 +6,7 @@ use diagnostics;
 use Algorithm::Permute;
 use Array::Utils qw(:all);
 
+
 # Change the directory to the one which contains the dictionary file.
 
 chdir "/home/technomage/Migration/Programming\ Files/Learning\ Perl/Pet\ Projects";
@@ -19,8 +20,7 @@ say "-----" x 10 . "\n";
 # Retrieve useable letters from standard input, storing them in a hash using ascending
 # numerical key values until an empty value is given.
 
-my %useableLettersForAnswer;
-my $letterIndexNumber=0;
+my @useableLettersForAnswer;
 
 say "Please enter each useable letter, followed by the ENTER key, one by one.";
 say "Press ENTER without inputting a letter to finish.";
@@ -28,14 +28,8 @@ say "Press ENTER without inputting a letter to finish.";
 while (<>) {
 	chomp $_;
 	last unless ($_);
-	$letterIndexNumber++;
-    $useableLettersForAnswer{$letterIndexNumber}="$_";
+    push @useableLettersForAnswer, $_ ;
 }
-
-##--Note:  The letters hashmap never has a key of 0. is this significant?
-##			Why do I even need to have a hash here for my set of useable letters?
-##			What's the rationale behind using a hash to store the letters?
-
 
 # Open a file handle to allow reading from the dictionary, exit if this operation fails.
 
@@ -48,15 +42,12 @@ my @dictionaryWordsOfCorrectSize;
 
 foreach (<dictionary>){
 	if (/^[a-zA-Z]{$numberOfLettersInAnswer}$/){
-		#??would it be possible for us to just `chomp` the line here instead?? seems so?
-		#let's try `chomp $_;` here, remove chomp below
+		chomp $_;
 		push @dictionaryWordsOfCorrectSize, $_;
 	}
 }
 
-chomp @dictionaryWordsOfCorrectSize;
-
-# Enumerate through all the dictionary entries containing the correct number of letters.
+# Enumerate all dictionary entries found to contain the correct number of letters.
 
 say "The dictionary words that match the answer's correct size are the following:\n";
 
@@ -66,12 +57,9 @@ foreach (@dictionaryWordsOfCorrectSize){
 
 say""; #extra linebreak for readability
 
-##--Note: Since all entries of proper size from the dictionary tend to successfully print out, the error must
-##        be in the code BELOW--
-
 # Instantiate an object that is capable of generating permutations from our useable letters, of the correct length.
 
-my $permutationCreator= new Algorithm::Permute ([values %useableLettersForAnswer], $numberOfLettersInAnswer);
+my $permutationCreator= new Algorithm::Permute ([@useableLettersForAnswer], $numberOfLettersInAnswer);
 
 my $numberOfUndupedPermutations = 0;
 my @listOfCompleteUndupedPermutations;
@@ -82,10 +70,16 @@ my %dedupedPotentialWords;
 # create single strings from permutations, and add these strings to a list of fully formed and unduped permutations.
 
 while (my @permutatedListOfLetters=$permutationCreator->next){
+	#--DEBUG--
+	say "one iteration: @permutatedListOfLetters";
+	#--DEBUG--
 	$numberOfUndupedPermutations++;
 	$joinedPermutationOfLetters= join '', @permutatedListOfLetters;
+	# might want to reconsider storing -everything- in an array. code complexity is a bitch.
 	push @listOfCompleteUndupedPermutations, $joinedPermutationOfLetters;
+
 	# can we separate the bottom into its own for list? it's a completely differnt operation, deduping.
+	# we just push this list of unduped words directly into a hash as part of the method
 	# if that goes well, we can move dedupedPotentialWords declaration down here, or encapsulate it
 	# alltogether, as the array of dedupes is what's really needed, not this hash.
 	$dedupedPotentialWords{$joinedPermutationOfLetters}="";
@@ -103,15 +97,11 @@ my $numberOfDuplicatePermutations = $numberOfUndupedPermutations-keys %dedupedPo
 
 # Transfer the deduped permutations from the hash into an array for iteration.
 
-my @potentialWordsFromPermutations;      
+my @potentialWordsFromPermutations;
 
 foreach (keys %dedupedPotentialWords){
 	push @potentialWordsFromPermutations, $_;
 }
-
-##--Notes: We never reached below this point in the code, as we do not show the output below. Most likely,
-##         the memory storage error is somewhere above this comment?--
-
 
 # Count off the number of permutations and dupes, and iterate through all the dedupes.
 
@@ -132,7 +122,7 @@ say "";
 
 my @possibleAnswers = intersect(@dictionaryWordsOfCorrectSize, @potentialWordsFromPermutations);
 
-say "Your dedupedPotentialWordsHash are..";
+say "Your possible answers for this game are the following words..\n";
 
 foreach (@possibleAnswers){
 	say $_;
