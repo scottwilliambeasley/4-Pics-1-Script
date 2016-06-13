@@ -6,87 +6,135 @@ use diagnostics;
 use Algorithm::Permute;
 use Array::Utils qw(:all);
 
-chdir "/home/wolverine/workspace/Learning\ Perl/Pet\ Projects";
+# Change the directory to the one which contains the dictionary file.
 
+chdir "/home/technomage/Migration/Programming\ Files/Learning\ Perl/Pet\ Projects";
 
-TAKING_INPUT_VARS:
-#DEFINING KEY VARIABLES
-my @placeholder;
-my %letters;
-my @permutations;
-my $permuted_text;
-my @list_of_answers;
+# Define the number of letters the answer must have.
 
-#DEFINING NUMBER OF LETTERS IN ANSWER
 print "\nPlease input how many letters are in the answer\n\n";
-chomp (my $number = <>);
-
+chomp (my $numberOfLettersInAnswer = <>);
 say "-----" x 10 . "\n";
 
-#TAKING INPUT LETTERS, STORING THEM IN HASH
-print "Please input all letters line-by-line.\nLeave a blank line and press ENTER when done.\n\n";
+# Retrieve useable letters from standard input, storing them in a hash using ascending
+# numerical key values until an empty value is given.
 
-	my $counter=0;
-	while (<>) {
+my %useableLettersForAnswer;
+my $letterIndexNumber=0;
+
+say "Please enter each useable letter, followed by the ENTER key, one by one.";
+say "Press ENTER without inputting a letter to finish.";
+
+while (<>) {
 	chomp $_;
 	last unless ($_);
-	$counter++;
-	$letters{$counter}="$_";
-				}
-							
-#OPENING DICTIONARY FILE
-open ("DIC", '<', 'words');
+	$letterIndexNumber++;
+    $useableLettersForAnswer{$letterIndexNumber}="$_";
+}
 
-#PARSING DICTIONARY, REMOVING NONMATCHING VALUES
-		
-		#REMOVING ALL ENTRIES THAT DON'T MATCH WORD SIZE
-		my @array_sorted_by_size;
-		
-		foreach (<DIC>){
-			if (/^[a-zA-Z]{$number}$/){
-				push @array_sorted_by_size, $_;
-							 }
-						}
-		#chomping array to remove linebreaks				
-		chomp @array_sorted_by_size;				
-		
-		#enumerating the dictionary entries that match the size				
-		say "Your sized letters are..\n";
-		foreach (@array_sorted_by_size){say $_}
-		say"";				
-		
-		#CREATING PERMUTATION OF ALL KNOWN ELEMENTS IN SETS OF NUMS
-		my $permutations;
-		my %answers; #creating a hash to store unique answers
-		
-		#creating the permutations
-		my $permutate_me= new Algorithm::Permute ([values %letters], $number);
-		while (my @permutator=$permutate_me->next)
-		{
-		$permutations++;					  #getting total number of unduped ppermutations
-		$permuted_text= join '', @permutator; #joining the list input into a single variable
-		push @permutations, $permuted_text;   #pushing the joined variable to an array that stores every permutation
-		$answers{$permuted_text}="";	      #duping permutations via hash keys
-		}
-		
-		my $dupes = $permutations-keys %answers ;
-		
-		my @keyholder;
-		foreach (keys %answers){
-		push @keyholder, $_;	
-		}
-		
-		say "You have $permutations permutations, $dupes of which are duplicates.\n";
-		say "Your permutations are..";
-		my $permutations2;
-		foreach (@permutations){$permutations2++;say"$permutations2 $_"}
-		say "";
-		
-		#COMPARING PERMUTATIONS OF LETTERS, TO SORTED ENTRIES
-		
-		say "Your answers are..";
-		
-		my @answers = intersect(@array_sorted_by_size, @keyholder);
-		
-		
-		foreach (@answers){say $_};
+##--Note:  The letters hashmap never has a key of 0. is this significant?
+##			Why do I even need to have a hash here for my set of useable letters?
+##			What's the rationale behind using a hash to store the letters?
+
+
+# Open a file handle to allow reading from the dictionary, exit if this operation fails.
+
+open ("dictionary", '<', 'words')
+	or die "Could not open file handle for dictionary.";
+
+# Parse the entire dictionary file. For every word matching the correct size, add it to the list of potential answers.
+
+my @dictionaryWordsOfCorrectSize;
+
+foreach (<dictionary>){
+	if (/^[a-zA-Z]{$numberOfLettersInAnswer}$/){
+		#??would it be possible for us to just `chomp` the line here instead?? seems so?
+		#let's try `chomp $_;` here, remove chomp below
+		push @dictionaryWordsOfCorrectSize, $_;
+	}
+}
+
+chomp @dictionaryWordsOfCorrectSize;
+
+# Enumerate through all the dictionary entries containing the correct number of letters.
+
+say "The dictionary words that match the answer's correct size are the following:\n";
+
+foreach (@dictionaryWordsOfCorrectSize){
+	say $_;
+}
+
+say""; #extra linebreak for readability
+
+##--Note: Since all entries of proper size from the dictionary tend to successfully print out, the error must
+##        be in the code BELOW--
+
+# Instantiate an object that is capable of generating permutations from our useable letters, of the correct length.
+
+my $permutationCreator= new Algorithm::Permute ([values %useableLettersForAnswer], $numberOfLettersInAnswer);
+
+my $numberOfUndupedPermutations = 0;
+my @listOfCompleteUndupedPermutations;
+my $joinedPermutationOfLetters;
+my %dedupedPotentialWords;
+
+# While the object is still able to generate fresh permutations, increment unduped permutation count,
+# create single strings from permutations, and add these strings to a list of fully formed and unduped permutations.
+
+while (my @permutatedListOfLetters=$permutationCreator->next){
+	$numberOfUndupedPermutations++;
+	$joinedPermutationOfLetters= join '', @permutatedListOfLetters;
+	push @listOfCompleteUndupedPermutations, $joinedPermutationOfLetters;
+	# can we separate the bottom into its own for list? it's a completely differnt operation, deduping.
+	# if that goes well, we can move dedupedPotentialWords declaration down here, or encapsulate it
+	# alltogether, as the array of dedupes is what's really needed, not this hash.
+	$dedupedPotentialWords{$joinedPermutationOfLetters}="";
+}
+
+
+# Count the total duplicates made by subtracting the number of deduped words from the
+#  total number of raw permutations created.
+
+my $numberOfDuplicatePermutations = $numberOfUndupedPermutations-keys %dedupedPotentialWords ;
+
+         #!! We should switch the order of the section above and below.
+         #!! We should get the array -first-before we start counting the number of duplicates found,
+         #!! and then get the
+
+# Transfer the deduped permutations from the hash into an array for iteration.
+
+my @potentialWordsFromPermutations;      
+
+foreach (keys %dedupedPotentialWords){
+	push @potentialWordsFromPermutations, $_;
+}
+
+##--Notes: We never reached below this point in the code, as we do not show the output below. Most likely,
+##         the memory storage error is somewhere above this comment?--
+
+
+# Count off the number of permutations and dupes, and iterate through all the dedupes.
+
+say "You have $numberOfUndupedPermutations permutations, $numberOfDuplicatePermutations of which are duplicates.\n";
+say "Your permutations are..";
+
+my $dedupedPermutationsCount = 0;
+
+foreach (@listOfCompleteUndupedPermutations){
+	$dedupedPermutationsCount++;
+	say "$dedupedPermutationsCount $_";
+}
+
+say "";
+
+# Our final list of answers will be composed of words that are found in -both- the
+# deduped permutations list AND the dictionary words list. We print each one.
+
+my @possibleAnswers = intersect(@dictionaryWordsOfCorrectSize, @potentialWordsFromPermutations);
+
+say "Your dedupedPotentialWordsHash are..";
+
+foreach (@possibleAnswers){
+	say $_;
+};
+
