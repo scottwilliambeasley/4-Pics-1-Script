@@ -70,18 +70,9 @@ my %dedupedPotentialWords;
 # create single strings from permutations, and add these strings to a list of fully formed and unduped permutations.
 
 while (my @permutatedListOfLetters=$permutationCreator->next){
-	#--DEBUG--
-	say "one iteration: @permutatedListOfLetters";
-	#--DEBUG--
 	$numberOfUndupedPermutations++;
 	$joinedPermutationOfLetters= join '', @permutatedListOfLetters;
-	# might want to reconsider storing -everything- in an array. code complexity is a bitch.
 	push @listOfCompleteUndupedPermutations, $joinedPermutationOfLetters;
-
-	# can we separate the bottom into its own for list? it's a completely differnt operation, deduping.
-	# we just push this list of unduped words directly into a hash as part of the method
-	# if that goes well, we can move dedupedPotentialWords declaration down here, or encapsulate it
-	# alltogether, as the array of dedupes is what's really needed, not this hash.
 	$dedupedPotentialWords{$joinedPermutationOfLetters}="";
 }
 
@@ -90,10 +81,6 @@ while (my @permutatedListOfLetters=$permutationCreator->next){
 #  total number of raw permutations created.
 
 my $numberOfDuplicatePermutations = $numberOfUndupedPermutations-keys %dedupedPotentialWords ;
-
-         #!! We should switch the order of the section above and below.
-         #!! We should get the array -first-before we start counting the number of duplicates found,
-         #!! and then get the
 
 # Transfer the deduped permutations from the hash into an array for iteration.
 
