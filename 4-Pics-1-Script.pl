@@ -21,18 +21,18 @@ if ($numberOfCommandLineArguments == 1){
 		die "Folder pathway given, ".$dictionaryDir." is not accessible";
 
 } elsif ($numberOfCommandLineArguments > 1){
-	die "Usage: 4-Pics-1-Script.pl [PATH TO FOLDER CONTAINING words]";
+	die "Usage: 4-Pics-1-Script.pl [PATH TO FOLDER CONTAINING 4-Pics-1-Script-Dictionary.txt]";
 }
 
 # Make sure that the dictionary file exists and is accessible in directory.
 
-my $dictionaryPath = $dictionaryDir."/words";
+my $dictionaryPath = $dictionaryDir."/4-Pics-1-Script-Dictionary.txt";
 
 if ( -f $dictionaryPath) {
-	open ("dictionary", '<', 'words') or
+	open ("dictionary", '<', '4-Pics-1-Script-Dictionary.txt') or
 		die "Lacking proper permissions to open file handle for dictionary.";
 } else {
-	die "words file not present in ".cwd;
+	die "4-Pics-1-Script-Dictionary.txt file not present in ".cwd;
 }
 
 # Query the user repeatedly for the number of letters the answer must have
@@ -156,7 +156,8 @@ foreach (@listOfCompleteUndupedPermutations){
 }
 
 say "";
-
+say "-----" x 10 . "\n";
+say "";
 # Our final list of answers will be composed of words that are found in -both- the
 # deduped permutations list AND the dictionary words list. We print each one.
 
