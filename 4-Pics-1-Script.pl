@@ -5,20 +5,47 @@ use warnings;
 use diagnostics;
 use Algorithm::Permute;
 use Array::Utils qw(:all);
+use Cwd;
 
 
-# Change the directory to the one which contains the dictionary file.
+my $dictionaryDir = cwd;
 
-chdir "/home/technomage/Migration/Programming\ Files/Learning\ Perl/Pet\ Projects";
+# Attempt to change into the directory supplied by @ARGV, if any.
+
+my $numberOfCommandLineArguments = $#ARGV + 1;
+
+if ($numberOfCommandLineArguments == 1){
+	$dictionaryDir = pop @ARGV;
+
+	chdir $dictionaryDir or
+		die "Folder pathway given, ".$dictionaryDir." is not accessible";
+
+} elsif ($numberOfCommandLineArguments > 1){
+	die "Usage: 4-Pics-1-Script.pl [PATH TO FOLDER CONTAINING words]";
+}
+
+# Make sure that the dictionary file exists and is accessible in directory.
+
+my $dictionaryPath = $dictionaryDir."/words";
+
+if ( -f $dictionaryPath) {
+	open ("dictionary", '<', 'words') or
+		die "Lacking proper permissions to open file handle for dictionary.";
+} else {
+	die "words file not present in ".cwd;
+}
 
 # Define the number of letters the answer must have.
 
 print "\nPlease input how many letters are in the answer\n\n";
+
 chomp (my $numberOfLettersInAnswer = <>);
+
+say "";
+say "Solving for words with ".$numberOfLettersInAnswer." letters.";
 say "-----" x 10 . "\n";
 
-# Retrieve useable letters from standard input, storing them in a hash using ascending
-# numerical key values until an empty value is given.
+# Retrieve useable letters from standard input, storing them in an array
 
 my @useableLettersForAnswer;
 
@@ -31,12 +58,8 @@ while (<>) {
     push @useableLettersForAnswer, $_ ;
 }
 
-# Open a file handle to allow reading from the dictionary, exit if this operation fails.
-
-open ("dictionary", '<', 'words')
-	or die "Could not open file handle for dictionary.";
-
-# Parse the entire dictionary file. For every word matching the correct size, add it to the list of potential answers.
+# Parse the entire dictionary file using the file handle. For every word matching the correct
+#  size, add it to the list of potential answers, then close the file handle.
 
 my @dictionaryWordsOfCorrectSize;
 
@@ -46,6 +69,8 @@ foreach (<dictionary>){
 		push @dictionaryWordsOfCorrectSize, $_;
 	}
 }
+
+close "dictionary" or die $!;
 
 # Enumerate all dictionary entries found to contain the correct number of letters.
 
@@ -70,12 +95,14 @@ my %dedupedPotentialWords;
 # create single strings from permutations, and add these strings to a list of fully formed and unduped permutations.
 
 while (my @permutatedListOfLetters=$permutationCreator->next){
+
 	$numberOfUndupedPermutations++;
 	$joinedPermutationOfLetters= join '', @permutatedListOfLetters;
+	say "permutation $numberOfUndupedPermutations: @permutatedListOfLetters";
+
 	push @listOfCompleteUndupedPermutations, $joinedPermutationOfLetters;
 	$dedupedPotentialWords{$joinedPermutationOfLetters}="";
 }
-
 
 # Count the total duplicates made by subtracting the number of deduped words from the
 #  total number of raw permutations created.
