@@ -35,15 +35,31 @@ if ( -f $dictionaryPath) {
 	die "words file not present in ".cwd;
 }
 
-# Define the number of letters the answer must have.
+# Query the user repeatedly for the number of letters the answer must have
+#  until he supplies a valid number of letters.
 
-print "\nPlease input how many letters are in the answer\n\n";
+my $validNumberOfLettersGiven = 0;
+my $numberOfLettersInAnswer;
 
-chomp (my $numberOfLettersInAnswer = <>);
+until ($validNumberOfLettersGiven == 1){
+	say "\nPlease input how many letters are in the answer:\n\n";
+	chomp ($numberOfLettersInAnswer = <>);
+	say "";
 
-say "";
-say "Solving for words with ".$numberOfLettersInAnswer." letters.";
-say "-----" x 10 . "\n";
+	if ($numberOfLettersInAnswer =~ /^[3-9]$/){
+		$validNumberOfLettersGiven = 1;
+		say "A proper number of letters, ".$numberOfLettersInAnswer.", was entered. ";
+		say "";
+		say "Now solving for words with exactly ".$numberOfLettersInAnswer." letters.";
+		say "-----" x 10 . "\n";
+		next;
+	}
+
+	say "An -invalid- input was given. You may only enter a single digit, from 3 to 9.";
+	say "Try again.";
+	say "-----" x 10 . "\n";
+
+}
 
 # Retrieve useable letters from standard input, storing them in an array
 
