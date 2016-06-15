@@ -61,17 +61,26 @@ until ($validNumberOfLettersGiven == 1){
 
 }
 
-# Retrieve useable letters from standard input, storing them in an array
+# Ask the user to input letters until 12 valid letters are given. Store these in an array.
 
 my @useableLettersForAnswer;
+my $givenLetterCount = 0;
+my $currentLetterGiven;
 
 say "Please enter each useable letter, followed by the ENTER key, one by one.";
-say "Press ENTER without inputting a letter to finish.";
 
-while (<>) {
-	chomp $_;
-	last unless ($_);
-    push @useableLettersForAnswer, $_ ;
+while ($givenLetterCount!=12){
+	chomp ($currentLetterGiven = <>);
+
+	if ($currentLetterGiven =~ /^[a-zA-Z]$/){
+		$givenLetterCount++;
+		say "Character #".$givenLetterCount." is ".$currentLetterGiven;
+		push @useableLettersForAnswer, $currentLetterGiven;
+	} else {
+		say "That is not a single letter. Please try again and enter another letter found on your game screen.";
+		redo;
+	}
+
 }
 
 # Parse the entire dictionary file using the file handle. For every word matching the correct
