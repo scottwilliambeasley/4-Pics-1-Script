@@ -73,6 +73,7 @@ while ($givenLetterCount!=12){
 	chomp ($currentLetterGiven = <>);
 
 	if ($currentLetterGiven =~ /^[a-zA-Z]$/){
+		$currentLetterGiven = lc ($currentLetterGiven);
 		$givenLetterCount++;
 		say "Character #".$givenLetterCount." is ".$currentLetterGiven;
 		push @useableLettersForAnswer, $currentLetterGiven;
